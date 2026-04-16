@@ -1,5 +1,5 @@
-api/
-src/
+/api/
+/src/
 requirements.txt
 requirements-api.txt
 Procfile
