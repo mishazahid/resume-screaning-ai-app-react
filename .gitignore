@@ -11,3 +11,6 @@ build/
 .DS_Store
 *.log
 .streamlit/secrets.toml
+node_modules/
+frontend/dist/
+.claude/

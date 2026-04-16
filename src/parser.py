@@ -19,6 +19,12 @@ import string
 import io
 from typing import Union
 
+EMAIL_RE = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
+
+def _extract_email(text: str):
+    m = EMAIL_RE.search(text)
+    return m.group(0) if m else None
+
 import fitz  # PyMuPDF
 
 
@@ -192,6 +198,7 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
         "cleaned_text": "",
         "sections": {name: "" for name in SECTION_ORDER},
         "error": None,
+        "email": None,
     }
 
     try:
@@ -210,6 +217,7 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
             if filename.lower().endswith(".txt"):
                 raw = file_bytes.decode("utf-8", errors="replace")
                 result["raw_text"] = raw
+                result["email"] = _extract_email(raw)
                 result["cleaned_text"] = clean_text(raw)
                 result["sections"] = _detect_sections(raw)
                 return result
@@ -222,6 +230,7 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
                 raw = file_bytes.decode("utf-8", errors="replace").strip()
                 if raw:
                     result["raw_text"] = raw
+                    result["email"] = _extract_email(raw)
                     result["cleaned_text"] = clean_text(raw)
                     result["sections"] = _detect_sections(raw)
                 else:
@@ -248,6 +257,7 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
             return result
 
         result["raw_text"] = raw
+        result["email"] = _extract_email(raw)
         result["cleaned_text"] = clean_text(raw)
         result["sections"] = _detect_sections(raw)
 

@@ -1,0 +1,14 @@
+[build]
+builder = "NIXPACKS"
+
+[build.nixpacksPlan.phases.setup]
+nixPkgs = ["python311"]
+
+[deploy]
+startCommand = "uvicorn api.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/api/sample-jd"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[[services]]
+name = "resume-screening-api"
