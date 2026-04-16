@@ -13,7 +13,7 @@ cmds = []
 [deploy]
 startCommand = "/app/.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/api/sample-jd"
-healthcheckTimeout = 300
+healthcheckTimeout = 600
 restartPolicyType = "ON_FAILURE"
 
 [[services]]
