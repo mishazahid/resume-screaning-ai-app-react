@@ -1,0 +1,7 @@
+api/
+src/
+requirements.txt
+requirements-api.txt
+Procfile
+railway.toml
+*.py
