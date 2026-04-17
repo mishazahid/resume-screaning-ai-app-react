@@ -284,15 +284,21 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
                     )
                 return result
 
-        # ---- Extract text from every page --------------------------------
+        # ---- Extract text and hyperlinks from every page -----------------
         page_texts: list[str] = []
+        link_uris: list[str] = []
         for page in doc:
-            page_text = page.get_text("text")  # plain text extraction
+            page_text = page.get_text("text")
             if page_text:
                 page_texts.append(page_text)
+            for link in page.get_links():
+                uri = link.get("uri", "")
+                if uri:
+                    link_uris.append(uri)
         doc.close()
 
         raw = "\n".join(page_texts)
+        link_blob = "\n".join(link_uris)  # searchable string of all URIs
 
         # Guard against scanned-only PDFs with no embedded text
         if not raw.strip():
@@ -304,8 +310,9 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
         result["raw_text"] = raw
         result["email"]    = _extract_email(raw)
         result["phone"]    = _extract_phone(raw)
-        result["linkedin"] = _extract_linkedin(raw)
-        result["github"]   = _extract_github(raw)
+        # Check text first, fall back to embedded hyperlink URIs
+        result["linkedin"] = _extract_linkedin(raw) or _extract_linkedin(link_blob)
+        result["github"]   = _extract_github(raw)   or _extract_github(link_blob)
         result["cleaned_text"] = clean_text(raw)
         result["sections"] = _detect_sections(raw)
 
