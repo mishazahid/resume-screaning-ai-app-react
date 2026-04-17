@@ -27,7 +27,11 @@ PHONE_RE      = re.compile(
 YEAR_RANGE_RE = re.compile(r'(19|20)\d{2}\s*[-–—to]\s*(19|20)\d{2}')
 TWO_YEARS_RE  = re.compile(r'^(19|20)\d{2}(19|20)\d{2}$')
 LINKEDIN_RE   = re.compile(r'linkedin\.com/in/([A-Za-z0-9\-_%]+)', re.IGNORECASE)
-GITHUB_RE     = re.compile(r'github\.com/([A-Za-z0-9\-_%]+)', re.IGNORECASE)
+GITHUB_RE     = re.compile(
+    r'(?:https?://)?(?:www\.)?github\.com/([A-Za-z0-9][A-Za-z0-9\-]{0,38})'
+    r'|(?:github|gh)\s*[:\|]\s*([A-Za-z0-9][A-Za-z0-9\-]{0,38})',
+    re.IGNORECASE
+)
 
 def _extract_email(text: str):
     m = EMAIL_RE.search(text)
@@ -52,7 +56,10 @@ def _extract_linkedin(text: str):
 
 def _extract_github(text: str):
     m = GITHUB_RE.search(text)
-    return f"https://github.com/{m.group(1)}" if m else None
+    if not m:
+        return None
+    username = m.group(1) or m.group(2)
+    return f"https://github.com/{username}"
 
 import fitz  # PyMuPDF
 
