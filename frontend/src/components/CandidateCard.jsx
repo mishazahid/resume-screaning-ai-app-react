@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import ScoreBreakdown from './ScoreBreakdown'
 import { SkillPillGroup } from './SkillPills'
 import EmailModal from './EmailModal'
@@ -129,17 +129,22 @@ export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) 
         {/* Rec badge */}
         <RecBadge rec={rec} />
 
-        {/* Interview scheduled indicator */}
-        {interviewBadge && (
-          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Scheduled
-          </span>
-        )}
+        {/* Schedule Interview button always visible in header */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowScheduler(true) }}
+          className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
+            interviewBadge
+              ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+              : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {interviewBadge ? 'Scheduled' : 'Schedule Interview'}
+        </button>
 
         {/* Chevron */}
         <svg
