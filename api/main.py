@@ -138,11 +138,18 @@ def _build_result(resume_data: dict, jd_data: dict, jd_skills: list) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Start-up: pre-load the heavy ML model once
+# Start-up: pre-load the heavy ML model in background thread (non-blocking)
 # ---------------------------------------------------------------------------
+import asyncio
+
 @app.on_event("startup")
 async def startup_event():
-    get_model()
+    asyncio.get_event_loop().run_in_executor(None, get_model)
+
+
+@app.get("/health", include_in_schema=False)
+async def health():
+    return {"status": "ok"}
 
 
 # ---------------------------------------------------------------------------
