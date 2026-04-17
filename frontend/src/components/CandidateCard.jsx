@@ -95,6 +95,18 @@ export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) 
     try { return JSON.parse(localStorage.getItem(`interview:${result.filename}`) || 'null') }
     catch { return null }
   })
+  const [notes, setNotes] = useState(() =>
+    localStorage.getItem(`notes:${result.filename}`) || ''
+  )
+  const [notesSaved, setNotesSaved] = useState(false)
+
+  function handleNotesChange(e) {
+    const val = e.target.value
+    setNotes(val)
+    localStorage.setItem(`notes:${result.filename}`, val)
+    setNotesSaved(true)
+    setTimeout(() => setNotesSaved(false), 1500)
+  }
 
   const { filename, scores, skill_match, explanation, sections, parse_error,
           education_label, experience_display,
@@ -361,6 +373,29 @@ export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) 
 
             </div>
           )}
+
+          {/* ── Interview Notes ── */}
+          <div className="mt-5 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Interview Notes</p>
+              {notesSaved && (
+                <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Saved
+                </span>
+              )}
+            </div>
+            <textarea
+              value={notes}
+              onChange={handleNotesChange}
+              placeholder="Add interview notes, observations, or follow-up items…"
+              rows={3}
+              className="w-full text-xs text-slate-700 placeholder-slate-400 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 transition"
+            />
+          </div>
+
         </div>
       )}
     </div>
