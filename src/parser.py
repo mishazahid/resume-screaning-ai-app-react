@@ -20,7 +20,10 @@ import io
 from typing import Union
 
 EMAIL_RE    = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
-PHONE_RE      = re.compile(r'(\+?[\d]{0,3}[\s.\-]?\(?\d{2,4}\)?[\s.\-]\d{2,4}[\s.\-]?\d{3,5})')
+PHONE_RE      = re.compile(
+    r'\+\d{1,3}[\s.\-]\d{6,12}'                                          # +92-3325516351 style
+    r'|\+?[\d]{0,3}[\s.\-]?\(?\d{2,4}\)?[\s.\-]\d{2,4}[\s.\-]?\d{3,5}' # segmented style
+)
 YEAR_RANGE_RE = re.compile(r'(19|20)\d{2}\s*[-–—to]\s*(19|20)\d{2}')
 TWO_YEARS_RE  = re.compile(r'^(19|20)\d{2}(19|20)\d{2}$')
 LINKEDIN_RE   = re.compile(r'linkedin\.com/in/([A-Za-z0-9\-_%]+)', re.IGNORECASE)
@@ -292,7 +295,10 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
             return result
 
         result["raw_text"] = raw
-        result["email"] = _extract_email(raw)
+        result["email"]    = _extract_email(raw)
+        result["phone"]    = _extract_phone(raw)
+        result["linkedin"] = _extract_linkedin(raw)
+        result["github"]   = _extract_github(raw)
         result["cleaned_text"] = clean_text(raw)
         result["sections"] = _detect_sections(raw)
 
