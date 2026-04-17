@@ -91,6 +91,9 @@ def _build_result(resume_data: dict, jd_data: dict, jd_skills: list) -> dict:
             "filename": resume_data["filename"],
             "parse_error": resume_data["error"],
             "candidate_email": None,
+            "candidate_phone": None,
+            "candidate_linkedin": None,
+            "candidate_github": None,
             "resume_skills": [],
             "skill_match": {
                 "matched": [], "missing": jd_skills, "extra": [],
@@ -123,7 +126,10 @@ def _build_result(resume_data: dict, jd_data: dict, jd_skills: list) -> dict:
     return {
         "filename": resume_data["filename"],
         "parse_error": None,
-        "candidate_email": resume_data.get("email"),
+        "candidate_email":   resume_data.get("email"),
+        "candidate_phone":   resume_data.get("phone"),
+        "candidate_linkedin": resume_data.get("linkedin"),
+        "candidate_github":  resume_data.get("github"),
         "resume_skills": resume_skills,
         "skill_match": skill_match,
         "scores": scores,

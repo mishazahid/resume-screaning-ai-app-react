@@ -19,11 +19,29 @@ import string
 import io
 from typing import Union
 
-EMAIL_RE = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
+EMAIL_RE    = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
+PHONE_RE    = re.compile(r'(\+?[\d\s\-().]{7,20}\d)')
+LINKEDIN_RE = re.compile(r'linkedin\.com/in/([A-Za-z0-9\-_%]+)', re.IGNORECASE)
+GITHUB_RE   = re.compile(r'github\.com/([A-Za-z0-9\-_%]+)', re.IGNORECASE)
 
 def _extract_email(text: str):
     m = EMAIL_RE.search(text)
     return m.group(0) if m else None
+
+def _extract_phone(text: str):
+    for m in PHONE_RE.finditer(text):
+        digits = re.sub(r'\D', '', m.group(0))
+        if 7 <= len(digits) <= 15:
+            return m.group(0).strip()
+    return None
+
+def _extract_linkedin(text: str):
+    m = LINKEDIN_RE.search(text)
+    return f"https://linkedin.com/in/{m.group(1)}" if m else None
+
+def _extract_github(text: str):
+    m = GITHUB_RE.search(text)
+    return f"https://github.com/{m.group(1)}" if m else None
 
 import fitz  # PyMuPDF
 
@@ -199,6 +217,9 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
         "sections": {name: "" for name in SECTION_ORDER},
         "error": None,
         "email": None,
+        "phone": None,
+        "linkedin": None,
+        "github": None,
     }
 
     try:
@@ -217,7 +238,10 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
             if filename.lower().endswith(".txt"):
                 raw = file_bytes.decode("utf-8", errors="replace")
                 result["raw_text"] = raw
-                result["email"] = _extract_email(raw)
+                result["email"]    = _extract_email(raw)
+                result["phone"]    = _extract_phone(raw)
+                result["linkedin"] = _extract_linkedin(raw)
+                result["github"]   = _extract_github(raw)
                 result["cleaned_text"] = clean_text(raw)
                 result["sections"] = _detect_sections(raw)
                 return result
@@ -230,7 +254,10 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
                 raw = file_bytes.decode("utf-8", errors="replace").strip()
                 if raw:
                     result["raw_text"] = raw
-                    result["email"] = _extract_email(raw)
+                    result["email"]    = _extract_email(raw)
+                result["phone"]    = _extract_phone(raw)
+                result["linkedin"] = _extract_linkedin(raw)
+                result["github"]   = _extract_github(raw)
                     result["cleaned_text"] = clean_text(raw)
                     result["sections"] = _detect_sections(raw)
                 else:
