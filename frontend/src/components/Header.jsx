@@ -15,7 +15,7 @@ export default function Header() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white leading-tight tracking-tight">
-                Resume Screening AI
+                RecruitR
               </h1>
               <p className="text-sm text-indigo-100 mt-1">
                 Paste a job description, upload resumes, get ranked candidates instantly.
