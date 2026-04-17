@@ -1,4 +1,8 @@
+import { useState } from 'react'
+import SchedulerModal from './SchedulerModal'
+
 export default function Header() {
+  const [showScheduler, setShowScheduler] = useState(false)
   return (
     <header className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 shadow-lg">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -23,13 +27,35 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Beta badge */}
-          <span className="text-xs font-semibold px-3.5 py-1.5 rounded-full bg-white/20 text-white border border-white/40 backdrop-blur-sm">
-            Beta
-          </span>
+          {/* Right side actions */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowScheduler(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold border border-white/40 backdrop-blur-sm transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Schedule Interview
+            </button>
+            <span className="text-xs font-semibold px-3.5 py-1.5 rounded-full bg-white/20 text-white border border-white/40 backdrop-blur-sm">
+              Beta
+            </span>
+          </div>
 
         </div>
       </div>
+
+      {showScheduler && (
+        <SchedulerModal
+          candidate={{ filename: 'General Interview' }}
+          jdPreview=""
+          onClose={() => setShowScheduler(false)}
+          onScheduled={() => {}}
+        />
+      )}
     </header>
   )
 }
