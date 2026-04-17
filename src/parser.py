@@ -291,10 +291,16 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
             page_text = page.get_text("text")
             if page_text:
                 page_texts.append(page_text)
+            # Method 1: link annotations
             for link in page.get_links():
                 uri = link.get("uri", "")
                 if uri:
                     link_uris.append(uri)
+            # Method 2: href attributes in HTML render (catches display-text hyperlinks)
+            page_html = page.get_text("html")
+            for href in re.findall(r'href=["\']([^"\']+)["\']', page_html):
+                if href.startswith("http") and href not in link_uris:
+                    link_uris.append(href)
         doc.close()
 
         raw = "\n".join(page_texts)
