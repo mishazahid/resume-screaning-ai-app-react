@@ -20,8 +20,9 @@ import io
 from typing import Union
 
 EMAIL_RE    = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
-PHONE_RE      = re.compile(r'(\+?1?[\s.\-]?\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4})')
-YEAR_RANGE_RE = re.compile(r'(19|20)\d{2}\s*[-–—]\s*(19|20)\d{2}')
+PHONE_RE      = re.compile(r'(\+?[\d]{0,3}[\s.\-]?\(?\d{2,4}\)?[\s.\-]\d{2,4}[\s.\-]?\d{3,5})')
+YEAR_RANGE_RE = re.compile(r'(19|20)\d{2}\s*[-–—to]\s*(19|20)\d{2}')
+TWO_YEARS_RE  = re.compile(r'^(19|20)\d{2}(19|20)\d{2}$')
 LINKEDIN_RE   = re.compile(r'linkedin\.com/in/([A-Za-z0-9\-_%]+)', re.IGNORECASE)
 GITHUB_RE     = re.compile(r'github\.com/([A-Za-z0-9\-_%]+)', re.IGNORECASE)
 
@@ -35,8 +36,11 @@ def _extract_phone(text: str):
         if YEAR_RANGE_RE.search(matched):
             continue
         digits = re.sub(r'\D', '', matched)
-        if 7 <= len(digits) <= 15:
-            return matched
+        if not (7 <= len(digits) <= 15):
+            continue
+        if TWO_YEARS_RE.match(digits):
+            continue
+        return matched
     return None
 
 def _extract_linkedin(text: str):
