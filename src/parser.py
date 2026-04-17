@@ -253,13 +253,13 @@ def extract_text(file: Union[str, "io.BytesIO"]) -> dict:
                 # Not a valid PDF stream — attempt to read as plain text
                 raw = file_bytes.decode("utf-8", errors="replace").strip()
                 if raw:
-                    result["raw_text"] = raw
-                    result["email"]    = _extract_email(raw)
-                result["phone"]    = _extract_phone(raw)
-                result["linkedin"] = _extract_linkedin(raw)
-                result["github"]   = _extract_github(raw)
+                    result["raw_text"]     = raw
+                    result["email"]        = _extract_email(raw)
+                    result["phone"]        = _extract_phone(raw)
+                    result["linkedin"]     = _extract_linkedin(raw)
+                    result["github"]       = _extract_github(raw)
                     result["cleaned_text"] = clean_text(raw)
-                    result["sections"] = _detect_sections(raw)
+                    result["sections"]     = _detect_sections(raw)
                 else:
                     result["error"] = (
                         "File is not a valid PDF and contains no readable text."
