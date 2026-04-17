@@ -9,4 +9,5 @@ COPY api/ ./api/
 COPY src/ ./src/
 COPY data/ ./data/
 
-CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+COPY start.py .
+CMD ["python3", "start.py"]
