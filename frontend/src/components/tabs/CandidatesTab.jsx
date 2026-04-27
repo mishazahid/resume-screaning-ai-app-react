@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import SummaryMetrics from '../SummaryMetrics'
 import FilterBar from '../FilterBar'
 import CandidateCard from '../CandidateCard'
+import CompareModal from '../CompareModal'
 import { sendEmail } from '../../api'
 
 const DEFAULT_FILTERS = {
@@ -47,7 +48,7 @@ function buildCsv(results) {
 // ---------------------------------------------------------------------------
 // Floating bulk-email action bar
 // ---------------------------------------------------------------------------
-function BulkEmailBar({ selected, candidates, jdText, onClear }) {
+function BulkEmailBar({ selected, candidates, jdText, onClear, onCompare }) {
   const [template, setTemplate] = useState('shortlist')
   const [sending, setSending]   = useState(false)
   const [done, setDone]         = useState(null)
@@ -117,6 +118,20 @@ function BulkEmailBar({ selected, candidates, jdText, onClear }) {
             {selected.size} selected
           </span>
 
+          {/* Compare button — only when 2-3 selected */}
+          {selected.size >= 2 && selected.size <= 3 && (
+            <button
+              onClick={onCompare}
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-500 rounded-xl text-xs font-semibold transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+              </svg>
+              Compare
+            </button>
+          )}
+
           <select
             value={template}
             onChange={(e) => setTemplate(e.target.value)}
@@ -171,8 +186,9 @@ function BulkEmailBar({ selected, candidates, jdText, onClear }) {
 // Main tab
 // ---------------------------------------------------------------------------
 export default function CandidatesTab({ data, jdText = '' }) {
-  const [filters, setFilters]   = useState(DEFAULT_FILTERS)
-  const [selected, setSelected] = useState(new Set())
+  const [filters, setFilters]     = useState(DEFAULT_FILTERS)
+  const [selected, setSelected]   = useState(new Set())
+  const [comparing, setComparing] = useState(false)
 
   const filtered = useMemo(() => {
     if (!data) return []
@@ -299,6 +315,14 @@ export default function CandidatesTab({ data, jdText = '' }) {
           candidates={data.results}
           jdText={jdText}
           onClear={() => setSelected(new Set())}
+          onCompare={() => setComparing(true)}
+        />
+      )}
+
+      {comparing && (
+        <CompareModal
+          candidates={data.results.filter((r) => selected.has(r.filename))}
+          onClose={() => setComparing(false)}
         />
       )}
     </div>
