@@ -240,8 +240,6 @@ export default function CandidatesTab({ data, jdText = '' }) {
       .sort((a, b) => b.scores.final_score - a.scores.final_score)
   }, [weighted, filters])
 
-  if (!data) return null
-
   // Apply manual drag order on top of filtered list
   const displayed = useMemo(() => {
     if (!dragOrder) return filtered
@@ -249,8 +247,7 @@ export default function CandidatesTab({ data, jdText = '' }) {
     return dragOrder.filter((f) => map[f]).map((f) => map[f])
   }, [filtered, dragOrder])
 
-  // Sync dragOrder when filtered list changes (new screening)
-  if (!dragOrder && filtered.length > 0 && false) { /* intentionally unused */ }
+  if (!data) return null
 
   function handleDragStart(i) { dragIndexRef.current = i }
 
