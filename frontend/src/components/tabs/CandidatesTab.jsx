@@ -3,7 +3,35 @@ import SummaryMetrics from '../SummaryMetrics'
 import FilterBar from '../FilterBar'
 import CandidateCard from '../CandidateCard'
 import CompareModal from '../CompareModal'
+import WeightsPanel, { DEFAULT_WEIGHTS } from '../WeightsPanel'
 import { sendEmail } from '../../api'
+
+function applyWeights(result, weights) {
+  const total = Object.values(weights).reduce((a, b) => a + b, 0)
+  if (total === 0) return result
+  const w = {
+    semantic:   weights.semantic   / total,
+    skills:     weights.skills     / total,
+    experience: weights.experience / total,
+    education:  weights.education  / total,
+  }
+  const s = result.scores
+  const final = Math.max(0, Math.min(1,
+    s.semantic_score   * w.semantic  +
+    s.skill_score      * w.skills    +
+    s.experience_score * w.experience +
+    s.education_score  * w.education
+  ))
+  const pct = Math.round(final * 1000) / 10
+  const recommendation =
+    final >= 0.75 ? 'Strong fit' :
+    final >= 0.55 ? 'Good fit'   :
+    final >= 0.35 ? 'Partial fit' : 'Weak fit'
+  return {
+    ...result,
+    scores: { ...s, final_score: final, final_score_pct: pct, recommendation, weights },
+  }
+}
 
 const DEFAULT_FILTERS = {
   search: '', minScore: 0, skill: '', recommendation: '', education: '',
@@ -189,19 +217,26 @@ export default function CandidatesTab({ data, jdText = '' }) {
   const [filters, setFilters]     = useState(DEFAULT_FILTERS)
   const [selected, setSelected]   = useState(new Set())
   const [comparing, setComparing] = useState(false)
+  const [weights, setWeights]     = useState({ ...DEFAULT_WEIGHTS })
+
+  const weighted = useMemo(() =>
+    data ? data.results.map((r) => applyWeights(r, weights)) : []
+  , [data, weights])
 
   const filtered = useMemo(() => {
     if (!data) return []
     const { search, minScore, skill, recommendation, education } = filters
-    return data.results.filter((r) => {
-      if (search && !r.filename.toLowerCase().includes(search.toLowerCase())) return false
-      if (r.scores.final_score_pct < minScore) return false
-      if (skill && !r.skill_match.matched.includes(skill)) return false
-      if (recommendation && r.scores.recommendation !== recommendation) return false
-      if (education && r.education_label !== education) return false
-      return true
-    })
-  }, [data, filters])
+    return weighted
+      .filter((r) => {
+        if (search && !r.filename.toLowerCase().includes(search.toLowerCase())) return false
+        if (r.scores.final_score_pct < minScore) return false
+        if (skill && !r.skill_match.matched.includes(skill)) return false
+        if (recommendation && r.scores.recommendation !== recommendation) return false
+        if (education && r.education_label !== education) return false
+        return true
+      })
+      .sort((a, b) => b.scores.final_score - a.scores.final_score)
+  }, [weighted, filters])
 
   if (!data) return null
 
@@ -239,6 +274,8 @@ export default function CandidatesTab({ data, jdText = '' }) {
       <SummaryMetrics results={data.results} />
 
       <hr className="border-slate-200 my-8" />
+
+      <WeightsPanel weights={weights} onChange={setWeights} />
 
       <div className="mb-5">
         <FilterBar
