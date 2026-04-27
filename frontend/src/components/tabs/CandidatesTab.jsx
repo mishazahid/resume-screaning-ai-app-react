@@ -9,16 +9,27 @@ const DEFAULT_FILTERS = {
 
 function buildCsv(results) {
   const headers = [
-    'Rank','Filename','Final Score %','Semantic Score','Skill Score',
-    'Experience Score','Education Score','Recommendation','Matched Skills','Missing Skills',
+    'Rank', 'Name', 'Email', 'Phone', 'LinkedIn', 'GitHub',
+    'Final Score %', 'Recommendation',
+    'Semantic Score', 'Skill Score', 'Experience Score', 'Education Score',
+    'Experience', 'Education',
+    'Matched Skills', 'Missing Skills',
   ]
   const rows = results.map((r, i) => [
-    i + 1, r.filename, r.scores.final_score_pct,
-    (r.scores.semantic_score * 100).toFixed(1),
-    (r.scores.skill_score * 100).toFixed(1),
-    (r.scores.experience_score * 100).toFixed(1),
-    (r.scores.education_score * 100).toFixed(1),
+    i + 1,
+    r.filename.replace(/\.(pdf|txt)$/i, ''),
+    r.candidate_email  || '',
+    r.candidate_phone  || '',
+    r.candidate_linkedin || '',
+    r.candidate_github || '',
+    r.scores.final_score_pct,
     r.scores.recommendation,
+    (r.scores.semantic_score  * 100).toFixed(1),
+    (r.scores.skill_score     * 100).toFixed(1),
+    (r.scores.experience_score* 100).toFixed(1),
+    (r.scores.education_score * 100).toFixed(1),
+    r.experience_display || '',
+    r.education_label    || '',
     r.skill_match.matched.join('; '),
     r.skill_match.missing.join('; '),
   ])
@@ -74,10 +85,20 @@ export default function CandidatesTab({ data, jdText = '' }) {
         />
       </div>
 
-      {/* Ranked candidates */}
-      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
-        Ranked Candidates
-      </h2>
+      {/* Ranked candidates header + export button */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+          Ranked Candidates
+        </h2>
+        <button onClick={handleDownload}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+          </svg>
+          Export CSV {filtered.length < data.results.length ? `(${filtered.length})` : ''}
+        </button>
+      </div>
 
       {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 text-slate-400">
@@ -95,20 +116,9 @@ export default function CandidatesTab({ data, jdText = '' }) {
         </div>
       )}
 
-      {/* Download */}
-      <div className="mt-8 flex items-center gap-4">
-        <button onClick={handleDownload}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-sm font-medium transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-          </svg>
-          Download CSV {filtered.length < data.results.length ? `(${filtered.length} filtered)` : ''}
-        </button>
-        <span className="text-xs text-slate-400">
-          {data.results.length} total · {filtered.length} shown
-        </span>
-      </div>
+      <p className="mt-6 text-xs text-slate-400 text-right">
+        {data.results.length} total · {filtered.length} shown
+      </p>
     </div>
   )
 }
