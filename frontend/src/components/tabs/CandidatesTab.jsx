@@ -34,7 +34,25 @@ function applyWeights(result, weights) {
 }
 
 const DEFAULT_FILTERS = {
-  search: '', minScore: 0, skill: '', recommendation: '', education: '',
+  search: '', minScore: 0, skill: '', recommendation: '', education: '', hasContact: false,
+}
+
+const EMAIL_PREVIEW = {
+  shortlist: {
+    subject: (role) => `You've been shortlisted — ${role}`,
+    body: (name, role) =>
+      `Dear ${name},\n\nWe are pleased to inform you that you have been shortlisted for the position of ${role}.\n\nWe will be in touch shortly with the next steps.\n\nBest regards,\nHR Team`,
+  },
+  interview: {
+    subject: (role) => `Interview Invitation — ${role}`,
+    body: (name, role) =>
+      `Dear ${name},\n\nWe would like to invite you to an interview for the position of ${role}.\n\nPlease reply to this email with your availability for the coming week.\n\nBest regards,\nHR Team`,
+  },
+  rejection: {
+    subject: (role) => `Application Update — ${role}`,
+    body: (name, role) =>
+      `Dear ${name},\n\nThank you for your interest in the position of ${role}. After careful consideration, we have decided to move forward with other candidates at this time.\n\nWe appreciate your time and wish you every success.\n\nBest regards,\nHR Team`,
+  },
 }
 
 const TEMPLATES = [
@@ -80,10 +98,19 @@ function BulkEmailBar({ selected, candidates, jdText, onClear, onCompare }) {
   const [template, setTemplate] = useState('shortlist')
   const [sending, setSending]   = useState(false)
   const [done, setDone]         = useState(null)
+  const [previewing, setPreviewing] = useState(false)
 
   const selectedCandidates = candidates.filter((r) => selected.has(r.filename))
 
+  const role = jdText ? jdText.slice(0, 80) : 'the role'
+  const previewName = selectedCandidates[0]
+    ? selectedCandidates[0].filename.replace(/\.(pdf|txt)$/i, '').replace(/[_-]/g, ' ')
+    : 'Candidate'
+  const previewSubject = EMAIL_PREVIEW[template]?.subject(role) ?? ''
+  const previewBody    = EMAIL_PREVIEW[template]?.body(previewName, role) ?? ''
+
   async function handleSendAll() {
+    setPreviewing(false)
     setSending(true)
     const sentList    = []
     const skippedList = []
@@ -107,6 +134,52 @@ function BulkEmailBar({ selected, candidates, jdText, onClear, onCompare }) {
   }
 
   return (
+    <>
+    {/* ── Email preview modal ── */}
+    {previewing && (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+            <div>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5">Email Preview</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{previewSubject}</p>
+            </div>
+            <button onClick={() => setPreviewing(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="px-5 py-4">
+            <pre className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
+              {previewBody}
+            </pre>
+            <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+              Sending to <span className="font-semibold text-slate-600 dark:text-slate-300">{selectedCandidates.length}</span> candidate{selectedCandidates.length !== 1 ? 's' : ''}.
+              Candidates without an email will be skipped.
+            </p>
+          </div>
+          <div className="flex gap-3 px-5 pb-5">
+            <button
+              onClick={handleSendAll}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              Confirm & Send
+            </button>
+            <button
+              onClick={() => setPreviewing(false)}
+              className="px-4 py-2.5 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-4 min-w-[500px] max-w-lg">
       {done ? (
         // ── Result summary ──
@@ -171,7 +244,7 @@ function BulkEmailBar({ selected, candidates, jdText, onClear, onCompare }) {
           </select>
 
           <button
-            onClick={handleSendAll}
+            onClick={() => setPreviewing(true)}
             disabled={sending}
             className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl text-sm font-semibold transition-colors"
           >
@@ -207,6 +280,7 @@ function BulkEmailBar({ selected, candidates, jdText, onClear, onCompare }) {
         </div>
       )}
     </div>
+    </>
   )
 }
 
@@ -235,6 +309,7 @@ export default function CandidatesTab({ data, jdText = '' }) {
         if (skill && !r.skill_match.matched.includes(skill)) return false
         if (recommendation && r.scores.recommendation !== recommendation) return false
         if (education && r.education_label !== education) return false
+        if (filters.hasContact && !r.candidate_email) return false
         return true
       })
       .sort((a, b) => b.scores.final_score - a.scores.final_score)

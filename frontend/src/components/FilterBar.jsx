@@ -25,6 +25,7 @@ export default function FilterBar({ results, jdSkills = [], filters, onChange, o
     filters.skill,
     filters.recommendation,
     filters.education,
+    filters.hasContact,
   ].filter(Boolean).length
 
   return (
@@ -89,6 +90,17 @@ export default function FilterBar({ results, jdSkills = [], filters, onChange, o
             <option key={e} value={e}>{e}</option>
           ))}
         </Select>
+
+        {/* Has contact info */}
+        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={!!filters.hasContact}
+            onChange={(e) => onChange({ ...filters, hasContact: e.target.checked })}
+            className="w-3.5 h-3.5 accent-indigo-600 rounded"
+          />
+          <span className="text-xs text-slate-600 whitespace-nowrap">Has email</span>
+        </label>
 
         {/* Clear + count */}
         <div className="flex items-center gap-2 ml-auto">
