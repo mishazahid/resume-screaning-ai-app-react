@@ -99,6 +99,49 @@ html.dark {
 .dark .hover\:bg-slate-50:hover  { background-color: #1e293b !important; }
 .dark .hover\:bg-slate-100:hover { background-color: #334155 !important; }
 
+/* TabBar */
+.dark .border-gray-200  { border-color: #334155 !important; }
+.dark .text-gray-500    { color: #94a3b8 !important; }
+.dark .text-gray-700    { color: #cbd5e1 !important; }
+.dark .text-gray-300    { color: #475569 !important; }
+.dark .bg-gray-100      { background-color: #1e293b !important; }
+.dark .hover\:border-gray-300:hover { border-color: #475569 !important; }
+.dark .hover\:text-gray-700:hover   { color: #cbd5e1 !important; }
+
+/* InputPanel card headers — gradient backgrounds */
+.dark .bg-gradient-to-r { background-image: none !important; background-color: #1e293b !important; }
+.dark .from-indigo-50   { background-color: #1e1b4b !important; }
+.dark .from-violet-50   { background-color: #1e1040 !important; }
+.dark .border-indigo-100 { border-color: #312e81 !important; }
+.dark .border-violet-100 { border-color: #2e1065 !important; }
+.dark .border-amber-100  { border-color: #451a03 !important; }
+
+/* Amber/warning tip box */
+.dark .text-amber-700   { color: #fcd34d !important; }
+
+/* Footer */
+.dark footer { background-color: #1e293b !important; border-color: #334155 !important; }
+
+/* Sticky tab bar */
+.dark .sticky { background-color: #0f172a !important; }
+
+/* Ensure all card panels in dark mode have visible bg */
+.dark .rounded-2xl.bg-white,
+.dark .rounded-xl.bg-white  { background-color: #1e293b !important; }
+
+/* Text color fixes for panels */
+.dark .text-slate-600 { color: #94a3b8 !important; }
+.dark h2.text-slate-800,
+.dark p.text-slate-800,
+.dark span.text-slate-800 { color: #e2e8f0 !important; }
+
+/* File list items */
+.dark .bg-slate-50.border.border-slate-200 { background-color: #1e293b !important; border-color: #334155 !important; }
+
+/* Load sample button */
+.dark .border-slate-200.bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+.dark .text-slate-600 { color: #94a3b8 !important; }
+
 /* AI Insight HTML rendered via dangerouslySetInnerHTML */
 .explanation-html ul {
   margin: 4px 0 0 0;
