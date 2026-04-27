@@ -9,9 +9,9 @@ const DEFAULT_FILTERS = {
 }
 
 const TEMPLATES = [
-  { id: 'shortlist',  label: 'Shortlist Notification' },
-  { id: 'interview',  label: 'Interview Invite' },
-  { id: 'rejection',  label: 'Rejection Email' },
+  { id: 'shortlist', label: 'Shortlist Notification' },
+  { id: 'interview', label: 'Interview Invite' },
+  { id: 'rejection', label: 'Rejection Email' },
 ]
 
 function buildCsv(results) {
@@ -25,10 +25,10 @@ function buildCsv(results) {
   const rows = results.map((r, i) => [
     i + 1,
     r.filename.replace(/\.(pdf|txt)$/i, ''),
-    r.candidate_email   || '',
-    r.candidate_phone   || '',
+    r.candidate_email    || '',
+    r.candidate_phone    || '',
     r.candidate_linkedin || '',
-    r.candidate_github  || '',
+    r.candidate_github   || '',
     r.scores.final_score_pct,
     r.scores.recommendation,
     (r.scores.semantic_score   * 100).toFixed(1),
@@ -44,49 +44,85 @@ function buildCsv(results) {
   return [headers, ...rows].map((row) => row.map(esc).join(',')).join('\n')
 }
 
+// ---------------------------------------------------------------------------
+// Floating bulk-email action bar
+// ---------------------------------------------------------------------------
 function BulkEmailBar({ selected, candidates, jdText, onClear }) {
   const [template, setTemplate] = useState('shortlist')
   const [sending, setSending]   = useState(false)
-  const [done, setDone]         = useState(null) // { sent, skipped }
+  const [done, setDone]         = useState(null)
 
-  const selectedCandidates = candidates.filter(r => selected.has(r.filename))
+  const selectedCandidates = candidates.filter((r) => selected.has(r.filename))
 
   async function handleSendAll() {
     setSending(true)
-    let sent = 0, skipped = 0
+    const sentList    = []
+    const skippedList = []
+
     for (const r of selectedCandidates) {
-      if (!r.candidate_email) { skipped++; continue }
       const name = r.filename.replace(/\.(pdf|txt)$/i, '').replace(/[_-]/g, ' ')
+      if (!r.candidate_email) {
+        skippedList.push({ name, reason: 'No email found in resume' })
+        continue
+      }
       try {
         await sendEmail(r.candidate_email, name, template, jdText)
-        sent++
+        sentList.push(name)
       } catch {
-        skipped++
+        skippedList.push({ name, reason: 'Send failed' })
       }
     }
+
     setSending(false)
-    setDone({ sent, skipped })
-    setTimeout(() => { setDone(null); onClear() }, 3000)
+    setDone({ sentList, skippedList })
   }
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-3.5 flex items-center gap-4 min-w-[480px]">
-      <span className="text-sm font-semibold flex-shrink-0">
-        {selected.size} selected
-      </span>
-
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-4 min-w-[500px] max-w-lg">
       {done ? (
-        <span className="text-sm text-emerald-400 font-semibold flex-1 text-center">
-          ✓ {done.sent} sent{done.skipped > 0 ? `, ${done.skipped} skipped (no email)` : ''}
-        </span>
+        // ── Result summary ──
+        <div className="space-y-2">
+          {done.sentList.length > 0 && (
+            <p className="text-sm text-emerald-400 font-semibold">
+              ✓ Sent to: {done.sentList.join(', ')}
+            </p>
+          )}
+          {done.skippedList.length > 0 && (
+            <div>
+              <p className="text-sm text-amber-400 font-semibold mb-1">
+                ✗ Skipped ({done.skippedList.length}):
+              </p>
+              <ul className="space-y-0.5">
+                {done.skippedList.map((s, i) => (
+                  <li key={i} className="text-xs text-slate-300 flex items-center gap-2">
+                    <span className="text-red-400">•</span>
+                    <span className="font-medium">{s.name}</span>
+                    <span className="text-slate-400">— {s.reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <button
+            onClick={onClear}
+            className="text-xs text-slate-400 hover:text-white underline mt-1"
+          >
+            Dismiss
+          </button>
+        </div>
       ) : (
-        <>
+        // ── Send controls ──
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-semibold flex-shrink-0">
+            {selected.size} selected
+          </span>
+
           <select
             value={template}
-            onChange={e => setTemplate(e.target.value)}
+            onChange={(e) => setTemplate(e.target.value)}
             className="flex-1 bg-slate-800 border border-slate-600 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           >
-            {TEMPLATES.map(t => (
+            {TEMPLATES.map((t) => (
               <option key={t.id} value={t.id}>{t.label}</option>
             ))}
           </select>
@@ -99,8 +135,8 @@ function BulkEmailBar({ selected, candidates, jdText, onClear }) {
             {sending ? (
               <>
                 <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
                 Sending…
               </>
@@ -114,23 +150,26 @@ function BulkEmailBar({ selected, candidates, jdText, onClear }) {
               </>
             )}
           </button>
-        </>
-      )}
 
-      <button
-        onClick={onClear}
-        className="flex-shrink-0 text-slate-400 hover:text-white transition-colors ml-1"
-        title="Deselect all"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
-          viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+          <button
+            onClick={onClear}
+            className="flex-shrink-0 text-slate-400 hover:text-white transition-colors"
+            title="Deselect all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
+// ---------------------------------------------------------------------------
+// Main tab
+// ---------------------------------------------------------------------------
 export default function CandidatesTab({ data, jdText = '' }) {
   const [filters, setFilters]   = useState(DEFAULT_FILTERS)
   const [selected, setSelected] = useState(new Set())
@@ -151,7 +190,7 @@ export default function CandidatesTab({ data, jdText = '' }) {
   if (!data) return null
 
   function toggleSelect(filename) {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Set(prev)
       next.has(filename) ? next.delete(filename) : next.add(filename)
       return next
@@ -162,21 +201,22 @@ export default function CandidatesTab({ data, jdText = '' }) {
     if (selected.size === filtered.length) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(filtered.map(r => r.filename)))
+      setSelected(new Set(filtered.map((r) => r.filename)))
     }
   }
 
-  const handleDownload = () => {
-    const csv = buildCsv(filtered.length ? filtered : data.results)
+  function handleDownload() {
+    const csv  = buildCsv(filtered.length ? filtered : data.results)
     const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
     a.href = url; a.download = 'candidates.csv'; a.click()
     URL.revokeObjectURL(url)
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
       <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
         Screening Summary
       </h2>
@@ -194,7 +234,7 @@ export default function CandidatesTab({ data, jdText = '' }) {
         />
       </div>
 
-      {/* Ranked candidates header */}
+      {/* Header row */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
@@ -209,21 +249,27 @@ export default function CandidatesTab({ data, jdText = '' }) {
             </button>
           )}
         </div>
-        <button onClick={handleDownload}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors">
+        <button
+          onClick={handleDownload}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors"
+        >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none"
             viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+            <path strokeLinecap="round" strokeLinejoin="round"
+              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
           </svg>
           Export CSV {filtered.length < data.results.length ? `(${filtered.length})` : ''}
         </button>
       </div>
 
+      {/* Candidate list */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 text-slate-400">
           <p className="text-sm font-medium">No candidates match the current filters.</p>
-          <button onClick={() => setFilters(DEFAULT_FILTERS)}
-            className="mt-3 text-indigo-600 text-sm hover:underline">
+          <button
+            onClick={() => setFilters(DEFAULT_FILTERS)}
+            className="mt-3 text-indigo-600 text-sm hover:underline"
+          >
             Clear filters
           </button>
         </div>
