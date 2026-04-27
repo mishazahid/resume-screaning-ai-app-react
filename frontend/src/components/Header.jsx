@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import SchedulerModal from './SchedulerModal'
+import useDarkMode from '../hooks/useDarkMode'
 
 export default function Header() {
   const [showScheduler, setShowScheduler] = useState(false)
+  const [dark, toggleDark] = useDarkMode()
   return (
     <header className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 shadow-lg">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -29,6 +31,27 @@ export default function Header() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDark}
+              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 border border-white/40 flex items-center justify-center text-white transition-colors"
+            >
+              {dark ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M12 3v1m0 16v1m8.66-9h-1M4.34 12h-1m15.07-6.07-.71.71M6.34 17.66l-.71.71m12.02 0-.71-.71M6.34 6.34l-.71-.71M12 5a7 7 0 100 14A7 7 0 0012 5z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                </svg>
+              )}
+            </button>
+
             <button
               onClick={() => setShowScheduler(true)}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-semibold border border-white/40 backdrop-blur-sm transition-colors"

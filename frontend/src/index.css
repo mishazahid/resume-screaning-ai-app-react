@@ -41,6 +41,64 @@
   }
 }
 
+/* ==========================================================================
+   Dark mode overrides
+   Toggled by adding/removing the `dark` class on <html>
+   ========================================================================== */
+html.dark {
+  color-scheme: dark;
+}
+.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Backgrounds */
+.dark .bg-white          { background-color: #1e293b !important; }
+.dark .bg-slate-50       { background-color: #0f172a !important; }
+.dark .bg-slate-100      { background-color: #1e293b !important; }
+.dark .bg-slate-200      { background-color: #334155 !important; }
+.dark .bg-indigo-50      { background-color: #1e1b4b !important; }
+.dark .bg-indigo-50\/60  { background-color: rgba(30,27,75,.6) !important; }
+.dark .bg-emerald-50     { background-color: #052e16 !important; }
+.dark .bg-sky-50         { background-color: #082f49 !important; }
+.dark .bg-amber-50       { background-color: #2d1a00 !important; }
+.dark .bg-red-50         { background-color: #2d0a0a !important; }
+.dark .bg-violet-50      { background-color: #1e1040 !important; }
+
+/* Text */
+.dark .text-slate-800    { color: #e2e8f0 !important; }
+.dark .text-slate-700    { color: #cbd5e1 !important; }
+.dark .text-slate-600    { color: #94a3b8 !important; }
+.dark .text-slate-500    { color: #64748b !important; }
+.dark .text-slate-400    { color: #475569 !important; }
+.dark .text-gray-900     { color: #f1f5f9 !important; }
+
+/* Borders */
+.dark .border-slate-100  { border-color: #334155 !important; }
+.dark .border-slate-200  { border-color: #334155 !important; }
+.dark .border-indigo-200 { border-color: #3730a3 !important; }
+.dark .border-emerald-200{ border-color: #065f46 !important; }
+.dark .border-red-200    { border-color: #7f1d1d !important; }
+
+/* Inputs & textareas */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder { color: #475569 !important; }
+
+/* Modals */
+.dark .shadow-2xl        { box-shadow: 0 25px 50px -12px rgba(0,0,0,.8) !important; }
+
+/* Hover states */
+.dark .hover\:bg-slate-50:hover  { background-color: #1e293b !important; }
+.dark .hover\:bg-slate-100:hover { background-color: #334155 !important; }
+
 /* AI Insight HTML rendered via dangerouslySetInnerHTML */
 .explanation-html ul {
   margin: 4px 0 0 0;
