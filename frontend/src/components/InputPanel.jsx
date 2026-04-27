@@ -1,5 +1,123 @@
 import { useRef, useState } from 'react'
 
+// ---------------------------------------------------------------------------
+// Template helpers (localStorage)
+// ---------------------------------------------------------------------------
+const TEMPLATES_KEY = 'jd_templates'
+
+function loadTemplates() {
+  try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]') }
+  catch { return [] }
+}
+function saveTemplates(list) {
+  localStorage.setItem(TEMPLATES_KEY, JSON.stringify(list))
+}
+
+// ---------------------------------------------------------------------------
+// Templates dropdown
+// ---------------------------------------------------------------------------
+function TemplatesMenu({ jdText, onLoad }) {
+  const [open, setOpen]     = useState(false)
+  const [templates, setTpl] = useState(loadTemplates)
+  const [naming, setNaming] = useState(false)
+  const [name, setName]     = useState('')
+
+  function handleSave() {
+    if (!name.trim() || !jdText.trim()) return
+    const updated = [{ name: name.trim(), text: jdText }, ...templates.filter(t => t.name !== name.trim())]
+    saveTemplates(updated)
+    setTpl(updated)
+    setNaming(false)
+    setName('')
+  }
+
+  function handleDelete(n) {
+    const updated = templates.filter(t => t.name !== n)
+    saveTemplates(updated)
+    setTpl(updated)
+  }
+
+  return (
+    <div className="relative">
+      <div className="flex items-center gap-1.5">
+        {jdText.trim() && (
+          <button
+            onClick={() => { setNaming((v) => !v); setOpen(false) }}
+            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
+          >
+            + Save template
+          </button>
+        )}
+        <button
+          onClick={() => { setOpen((v) => !v); setNaming(false) }}
+          className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          Templates {templates.length > 0 && `(${templates.length})`}
+        </button>
+      </div>
+
+      {/* Save name input */}
+      {naming && (
+        <div className="absolute right-0 top-8 z-20 bg-white border border-slate-200 rounded-xl shadow-lg p-3 w-64">
+          <p className="text-xs font-semibold text-slate-600 mb-2">Save as template</p>
+          <input
+            autoFocus
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSave()}
+            placeholder="Template name…"
+            className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          />
+          <div className="flex gap-2">
+            <button onClick={handleSave} className="flex-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-1.5 font-semibold transition-colors">
+              Save
+            </button>
+            <button onClick={() => setNaming(false)} className="flex-1 text-xs border border-slate-200 rounded-lg py-1.5 text-slate-500 hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Templates list */}
+      {open && (
+        <div className="absolute right-0 top-8 z-20 bg-white border border-slate-200 rounded-xl shadow-lg w-72 max-h-64 overflow-y-auto">
+          {templates.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-6">No saved templates yet.</p>
+          ) : (
+            <ul className="py-1">
+              {templates.map(t => (
+                <li key={t.name} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 group">
+                  <button
+                    onClick={() => { onLoad(t.text); setOpen(false) }}
+                    className="flex-1 text-left text-xs font-medium text-slate-700 truncate hover:text-indigo-600"
+                  >
+                    {t.name}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(t.name)}
+                    className="ml-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// File drop zone
+// ---------------------------------------------------------------------------
 function FileDropZone({ files, onAdd, onRemove }) {
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
@@ -77,6 +195,29 @@ function FileDropZone({ files, onAdd, onRemove }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Language detection (simple heuristic)
+// ---------------------------------------------------------------------------
+const LANG_PATTERNS = [
+  { lang: 'Arabic',  code: 'ar', re: /[\u0600-\u06FF]/ },
+  { lang: 'Chinese', code: 'zh', re: /[\u4E00-\u9FFF]/ },
+  { lang: 'French',  code: 'fr', re: /\b(nous|vous|notre|emploi|expérience|compétences)\b/i },
+  { lang: 'German',  code: 'de', re: /\b(wir|ihrer|berufserfahrung|kenntnisse|stellenanzeige)\b/i },
+  { lang: 'Spanish', code: 'es', re: /\b(nosotros|experiencia|habilidades|empleo|requisitos)\b/i },
+  { lang: 'Urdu',    code: 'ur', re: /[\u0600-\u06FF\u0750-\u077F]/ },
+]
+
+function detectLanguage(text) {
+  if (!text || text.trim().length < 30) return null
+  for (const { lang, re } of LANG_PATTERNS) {
+    if (re.test(text)) return lang
+  }
+  return 'English'
+}
+
+// ---------------------------------------------------------------------------
+// Main InputPanel
+// ---------------------------------------------------------------------------
 export default function InputPanel({
   jdText, onJdChange, wordCount,
   files, onFilesChange,
@@ -88,6 +229,9 @@ export default function InputPanel({
       return [...prev, ...newFiles.filter((f) => !names.has(f.name))]
     })
   }
+
+  const detectedLang = detectLanguage(jdText)
+  const isNonEnglish = detectedLang && detectedLang !== 'English'
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -105,12 +249,38 @@ export default function InputPanel({
             </div>
             <h2 className="text-sm font-bold text-slate-800">Job Description</h2>
             {wordCount > 0 && (
-              <span className="ml-auto text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">
+              <span className="ml-1 text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">
                 {wordCount} words
               </span>
             )}
+            {detectedLang && (
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                isNonEnglish
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}>
+                {detectedLang}
+              </span>
+            )}
+            <div className="ml-auto">
+              <TemplatesMenu jdText={jdText} onLoad={onJdChange} />
+            </div>
           </div>
         </div>
+
+        {isNonEnglish && (
+          <div className="px-4 pt-3">
+            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs text-amber-700">
+                <strong>{detectedLang}</strong> detected — the AI model is optimised for English. Results may be less accurate.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="p-4">
           <textarea
             value={jdText}
@@ -152,7 +322,6 @@ export default function InputPanel({
           <FileDropZone files={files} onAdd={handleAdd}
             onRemove={(i) => onFilesChange((prev) => prev.filter((_, idx) => idx !== i))} />
 
-          {/* Tip */}
           <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-100 rounded-lg">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0"
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -162,7 +331,6 @@ export default function InputPanel({
             <p className="text-xs text-amber-700">Upload 3–5 resumes for a meaningful comparison.</p>
           </div>
 
-          {/* Sample data */}
           <div className="border-t border-slate-100 pt-4 mt-auto">
             <p className="text-xs text-slate-400 mb-2 font-medium">Try with sample data</p>
             <button

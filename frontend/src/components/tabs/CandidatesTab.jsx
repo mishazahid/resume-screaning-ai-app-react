@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import SummaryMetrics from '../SummaryMetrics'
 import FilterBar from '../FilterBar'
 import CandidateCard from '../CandidateCard'
@@ -218,6 +218,8 @@ export default function CandidatesTab({ data, jdText = '' }) {
   const [selected, setSelected]   = useState(new Set())
   const [comparing, setComparing] = useState(false)
   const [weights, setWeights]     = useState({ ...DEFAULT_WEIGHTS })
+  const [dragOrder, setDragOrder] = useState(null) // null = score order
+  const dragIndexRef              = useRef(null)
 
   const weighted = useMemo(() =>
     data ? data.results.map((r) => applyWeights(r, weights)) : []
@@ -239,6 +241,32 @@ export default function CandidatesTab({ data, jdText = '' }) {
   }, [weighted, filters])
 
   if (!data) return null
+
+  // Apply manual drag order on top of filtered list
+  const displayed = useMemo(() => {
+    if (!dragOrder) return filtered
+    const map = Object.fromEntries(filtered.map((r) => [r.filename, r]))
+    return dragOrder.filter((f) => map[f]).map((f) => map[f])
+  }, [filtered, dragOrder])
+
+  // Sync dragOrder when filtered list changes (new screening)
+  if (!dragOrder && filtered.length > 0 && false) { /* intentionally unused */ }
+
+  function handleDragStart(i) { dragIndexRef.current = i }
+
+  function handleDragOver(e, i) {
+    e.preventDefault()
+    const from = dragIndexRef.current
+    if (from === null || from === i) return
+    const base = dragOrder || filtered.map((r) => r.filename)
+    const next = [...base]
+    const [moved] = next.splice(from, 1)
+    next.splice(i, 0, moved)
+    dragIndexRef.current = i
+    setDragOrder(next)
+  }
+
+  function handleDragEnd() { dragIndexRef.current = null }
 
   function toggleSelect(filename) {
     setSelected((prev) => {
@@ -294,11 +322,16 @@ export default function CandidatesTab({ data, jdText = '' }) {
             Ranked Candidates
           </h2>
           {filtered.length > 0 && (
-            <button
-              onClick={toggleSelectAll}
-              className="text-xs text-indigo-600 hover:underline"
-            >
+            <button onClick={toggleSelectAll} className="text-xs text-indigo-600 hover:underline">
               {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
+            </button>
+          )}
+          {dragOrder && (
+            <button
+              onClick={() => setDragOrder(null)}
+              className="text-xs text-amber-600 hover:underline font-semibold"
+            >
+              ↺ Reset order
             </button>
           )}
         </div>
@@ -316,34 +349,48 @@ export default function CandidatesTab({ data, jdText = '' }) {
       </div>
 
       {/* Candidate list */}
-      {filtered.length === 0 ? (
+      {displayed.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 text-slate-400">
           <p className="text-sm font-medium">No candidates match the current filters.</p>
-          <button
-            onClick={() => setFilters(DEFAULT_FILTERS)}
-            className="mt-3 text-indigo-600 text-sm hover:underline"
-          >
+          <button onClick={() => setFilters(DEFAULT_FILTERS)} className="mt-3 text-indigo-600 text-sm hover:underline">
             Clear filters
           </button>
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((r, i) => (
-            <CandidateCard
-              key={`${r.filename}-${i}`}
-              result={r}
-              rank={i + 1}
-              defaultOpen={i === 0}
-              jdPreview={jdText}
-              selected={selected.has(r.filename)}
-              onToggleSelect={toggleSelect}
-            />
+          {displayed.map((r, i) => (
+            <div
+              key={r.filename}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={(e) => handleDragOver(e, i)}
+              onDragEnd={handleDragEnd}
+              className="flex items-start gap-2 group"
+            >
+              {/* Drag handle */}
+              <div className="flex-shrink-0 mt-5 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <CandidateCard
+                  result={r}
+                  rank={i + 1}
+                  defaultOpen={i === 0}
+                  jdPreview={jdText}
+                  selected={selected.has(r.filename)}
+                  onToggleSelect={toggleSelect}
+                />
+              </div>
+            </div>
           ))}
         </div>
       )}
 
       <p className="mt-6 text-xs text-slate-400 text-right">
-        {data.results.length} total · {filtered.length} shown
+        {data.results.length} total · {displayed.length} shown
+        {dragOrder && <span className="ml-2 text-amber-500">· manually reordered</span>}
       </p>
 
       {selected.size > 0 && (
