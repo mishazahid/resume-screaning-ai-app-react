@@ -43,39 +43,47 @@ function TemplatesMenu({ jdText, onLoad }) {
         {jdText.trim() && (
           <button
             onClick={() => { setNaming((v) => !v); setOpen(false) }}
-            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-500 hover:text-indigo-700 px-2.5 py-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
           >
-            + Save template
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Save template
           </button>
         )}
         <button
           onClick={() => { setOpen((v) => !v); setNaming(false) }}
-          className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1"
+          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-2.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16" />
           </svg>
-          Templates {templates.length > 0 && `(${templates.length})`}
+          Templates
+          {templates.length > 0 && (
+            <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+              {templates.length}
+            </span>
+          )}
         </button>
       </div>
 
       {/* Save name input */}
       {naming && (
-        <div className="absolute right-0 top-8 z-20 bg-white border border-slate-200 rounded-xl shadow-lg p-3 w-64">
-          <p className="text-xs font-semibold text-slate-600 mb-2">Save as template</p>
+        <div className="absolute right-0 top-9 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 w-64">
+          <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">Save as template</p>
           <input
             autoFocus
             value={name}
             onChange={e => setName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
-            placeholder="Template name…"
-            className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            placeholder="e.g. Senior Engineer Role…"
+            className="w-full text-xs border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-lg px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-slate-400"
           />
           <div className="flex gap-2">
-            <button onClick={handleSave} className="flex-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-1.5 font-semibold transition-colors">
+            <button onClick={handleSave} className="flex-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg py-1.5 font-semibold transition-colors">
               Save
             </button>
-            <button onClick={() => setNaming(false)} className="flex-1 text-xs border border-slate-200 rounded-lg py-1.5 text-slate-500 hover:bg-slate-50 transition-colors">
+            <button onClick={() => { setNaming(false); setName('') }} className="flex-1 text-xs border border-slate-200 dark:border-slate-600 rounded-lg py-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
               Cancel
             </button>
           </div>
@@ -84,24 +92,36 @@ function TemplatesMenu({ jdText, onLoad }) {
 
       {/* Templates list */}
       {open && (
-        <div className="absolute right-0 top-8 z-20 bg-white border border-slate-200 rounded-xl shadow-lg w-72 max-h-64 overflow-y-auto">
+        <div className="absolute right-0 top-9 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl w-72 overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Saved Templates</p>
+          </div>
           {templates.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6">No saved templates yet.</p>
+            <div className="text-center py-8 px-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-xs text-slate-400 dark:text-slate-500">No saved templates yet.</p>
+              <p className="text-[11px] text-slate-300 dark:text-slate-600 mt-1">Paste a JD and click Save template.</p>
+            </div>
           ) : (
-            <ul className="py-1">
+            <ul className="max-h-56 overflow-y-auto py-1.5">
               {templates.map(t => (
-                <li key={t.name} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 group">
-                  <button
-                    onClick={() => { onLoad(t.text); setOpen(false) }}
-                    className="flex-1 text-left text-xs font-medium text-slate-700 truncate hover:text-indigo-600"
-                  >
+                <li key={t.name} className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 group transition-colors cursor-pointer"
+                  onClick={() => { onLoad(t.text); setOpen(false) }}>
+                  <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {t.name}
-                  </button>
+                  </span>
                   <button
-                    onClick={() => handleDelete(t.name)}
-                    className="ml-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(t.name) }}
+                    className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
