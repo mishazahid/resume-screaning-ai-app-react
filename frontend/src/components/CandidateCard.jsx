@@ -85,6 +85,46 @@ function SectionChecklist({ sections }) {
 }
 
 // ---------------------------------------------------------------------------
+// Status Pipeline
+// ---------------------------------------------------------------------------
+const STATUSES = ['Screened', 'Interviewed', 'Offered', 'Hired', 'Rejected']
+const STATUS_STYLES = {
+  Screened:   'bg-slate-100  text-slate-600  border-slate-300',
+  Interviewed:'bg-sky-100    text-sky-700    border-sky-300',
+  Offered:    'bg-violet-100 text-violet-700 border-violet-300',
+  Hired:      'bg-emerald-100 text-emerald-700 border-emerald-300',
+  Rejected:   'bg-red-100    text-red-700    border-red-300',
+}
+
+function StatusPipeline({ filename }) {
+  const key = `status:${filename}`
+  const [status, setStatus] = useState(() => localStorage.getItem(key) || 'Screened')
+
+  function handleChange(s) {
+    setStatus(s)
+    localStorage.setItem(key, s)
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {STATUSES.map((s) => (
+        <button
+          key={s}
+          onClick={() => handleChange(s)}
+          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+            status === s
+              ? STATUS_STYLES[s] + ' ring-2 ring-offset-1 ring-current'
+              : 'bg-white text-slate-400 border-slate-200 hover:border-slate-400'
+          }`}
+        >
+          {s}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main CandidateCard
 // ---------------------------------------------------------------------------
 export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) {
@@ -189,6 +229,12 @@ export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) 
       {/* ── Expanded body ── */}
       {open && (
         <div className="border-t border-slate-100 p-5 accordion-enter">
+
+          {/* ── Status Pipeline ── */}
+          <div className="mb-4 pb-4 border-b border-slate-100">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Status</p>
+            <StatusPipeline filename={filename} />
+          </div>
 
           {/* ── Action buttons ── */}
           <div className="flex flex-wrap items-center gap-2 mb-5 pb-4 border-b border-slate-100">
