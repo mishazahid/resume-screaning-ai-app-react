@@ -127,7 +127,7 @@ function StatusPipeline({ filename }) {
 // ---------------------------------------------------------------------------
 // Main CandidateCard
 // ---------------------------------------------------------------------------
-export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) {
+export default function CandidateCard({ result, rank, defaultOpen, jdPreview, selected, onToggleSelect }) {
   const [open, setOpen] = useState(defaultOpen)
   const [showEmail, setShowEmail]         = useState(false)
   const [showScheduler, setShowScheduler] = useState(false)
@@ -158,21 +158,34 @@ export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) 
   const interviewBadge = interview
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-colors ${selected ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'}`}>
 
-      {/* ── Card header / toggle ── */}
-      <button
-        className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
+      {/* ── Card header ── */}
+      <div className="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors">
+
+        {/* Checkbox */}
+        {onToggleSelect && (
+          <input
+            type="checkbox"
+            checked={!!selected}
+            onChange={() => onToggleSelect(filename)}
+            className="flex-shrink-0 w-4 h-4 rounded accent-indigo-600 cursor-pointer"
+          />
+        )}
+
         {/* Rank badge */}
         <span className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">
           #{rank}
         </span>
 
-        {/* Filename */}
-        <span className="flex-1 font-semibold text-slate-800 text-sm truncate">{displayName}</span>
+        {/* Filename — clicking expands */}
+        <button
+          className="flex-1 text-left font-semibold text-slate-800 text-sm truncate"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+        >
+          {displayName}
+        </button>
 
         {/* Score */}
         <span className="text-base font-extrabold text-slate-700 tabular-nums">
@@ -182,9 +195,9 @@ export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) 
         {/* Rec badge */}
         <RecBadge rec={rec} />
 
-        {/* Schedule Interview button always visible in header */}
+        {/* Schedule Interview */}
         <button
-          onClick={(e) => { e.stopPropagation(); setShowScheduler(true) }}
+          onClick={() => setShowScheduler(true)}
           className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
             interviewBadge
               ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
@@ -200,13 +213,16 @@ export default function CandidateCard({ result, rank, defaultOpen, jdPreview }) 
         </button>
 
         {/* Chevron */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`h-4 w-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+        <button onClick={() => setOpen((v) => !v)} className="flex-shrink-0">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+      </div>
 
       {/* ── Modals ── */}
       {showEmail && (

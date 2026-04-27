@@ -2,10 +2,17 @@ import { useState, useMemo } from 'react'
 import SummaryMetrics from '../SummaryMetrics'
 import FilterBar from '../FilterBar'
 import CandidateCard from '../CandidateCard'
+import { sendEmail } from '../../api'
 
 const DEFAULT_FILTERS = {
   search: '', minScore: 0, skill: '', recommendation: '', education: '',
 }
+
+const TEMPLATES = [
+  { id: 'shortlist',  label: 'Shortlist Notification' },
+  { id: 'interview',  label: 'Interview Invite' },
+  { id: 'rejection',  label: 'Rejection Email' },
+]
 
 function buildCsv(results) {
   const headers = [
@@ -18,16 +25,16 @@ function buildCsv(results) {
   const rows = results.map((r, i) => [
     i + 1,
     r.filename.replace(/\.(pdf|txt)$/i, ''),
-    r.candidate_email  || '',
-    r.candidate_phone  || '',
+    r.candidate_email   || '',
+    r.candidate_phone   || '',
     r.candidate_linkedin || '',
-    r.candidate_github || '',
+    r.candidate_github  || '',
     r.scores.final_score_pct,
     r.scores.recommendation,
-    (r.scores.semantic_score  * 100).toFixed(1),
-    (r.scores.skill_score     * 100).toFixed(1),
-    (r.scores.experience_score* 100).toFixed(1),
-    (r.scores.education_score * 100).toFixed(1),
+    (r.scores.semantic_score   * 100).toFixed(1),
+    (r.scores.skill_score      * 100).toFixed(1),
+    (r.scores.experience_score * 100).toFixed(1),
+    (r.scores.education_score  * 100).toFixed(1),
     r.experience_display || '',
     r.education_label    || '',
     r.skill_match.matched.join('; '),
@@ -37,8 +44,96 @@ function buildCsv(results) {
   return [headers, ...rows].map((row) => row.map(esc).join(',')).join('\n')
 }
 
+function BulkEmailBar({ selected, candidates, jdText, onClear }) {
+  const [template, setTemplate] = useState('shortlist')
+  const [sending, setSending]   = useState(false)
+  const [done, setDone]         = useState(null) // { sent, skipped }
+
+  const selectedCandidates = candidates.filter(r => selected.has(r.filename))
+
+  async function handleSendAll() {
+    setSending(true)
+    let sent = 0, skipped = 0
+    for (const r of selectedCandidates) {
+      if (!r.candidate_email) { skipped++; continue }
+      const name = r.filename.replace(/\.(pdf|txt)$/i, '').replace(/[_-]/g, ' ')
+      try {
+        await sendEmail(r.candidate_email, name, template, jdText)
+        sent++
+      } catch {
+        skipped++
+      }
+    }
+    setSending(false)
+    setDone({ sent, skipped })
+    setTimeout(() => { setDone(null); onClear() }, 3000)
+  }
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-3.5 flex items-center gap-4 min-w-[480px]">
+      <span className="text-sm font-semibold flex-shrink-0">
+        {selected.size} selected
+      </span>
+
+      {done ? (
+        <span className="text-sm text-emerald-400 font-semibold flex-1 text-center">
+          ✓ {done.sent} sent{done.skipped > 0 ? `, ${done.skipped} skipped (no email)` : ''}
+        </span>
+      ) : (
+        <>
+          <select
+            value={template}
+            onChange={e => setTemplate(e.target.value)}
+            className="flex-1 bg-slate-800 border border-slate-600 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          >
+            {TEMPLATES.map(t => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
+
+          <button
+            onClick={handleSendAll}
+            disabled={sending}
+            className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-xl text-sm font-semibold transition-colors"
+          >
+            {sending ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Sending…
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Send to All
+              </>
+            )}
+          </button>
+        </>
+      )}
+
+      <button
+        onClick={onClear}
+        className="flex-shrink-0 text-slate-400 hover:text-white transition-colors ml-1"
+        title="Deselect all"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 export default function CandidatesTab({ data, jdText = '' }) {
-  const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [filters, setFilters]   = useState(DEFAULT_FILTERS)
+  const [selected, setSelected] = useState(new Set())
 
   const filtered = useMemo(() => {
     if (!data) return []
@@ -55,6 +150,22 @@ export default function CandidatesTab({ data, jdText = '' }) {
 
   if (!data) return null
 
+  function toggleSelect(filename) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(filename) ? next.delete(filename) : next.add(filename)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === filtered.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(filtered.map(r => r.filename)))
+    }
+  }
+
   const handleDownload = () => {
     const csv = buildCsv(filtered.length ? filtered : data.results)
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -66,7 +177,6 @@ export default function CandidatesTab({ data, jdText = '' }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Summary metrics */}
       <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
         Screening Summary
       </h2>
@@ -74,7 +184,6 @@ export default function CandidatesTab({ data, jdText = '' }) {
 
       <hr className="border-slate-200 my-8" />
 
-      {/* Filter bar */}
       <div className="mb-5">
         <FilterBar
           results={filtered}
@@ -85,11 +194,21 @@ export default function CandidatesTab({ data, jdText = '' }) {
         />
       </div>
 
-      {/* Ranked candidates header + export button */}
+      {/* Ranked candidates header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-          Ranked Candidates
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            Ranked Candidates
+          </h2>
+          {filtered.length > 0 && (
+            <button
+              onClick={toggleSelectAll}
+              className="text-xs text-indigo-600 hover:underline"
+            >
+              {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
+            </button>
+          )}
+        </div>
         <button onClick={handleDownload}
           className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none"
@@ -111,7 +230,15 @@ export default function CandidatesTab({ data, jdText = '' }) {
       ) : (
         <div className="space-y-3">
           {filtered.map((r, i) => (
-            <CandidateCard key={`${r.filename}-${i}`} result={r} rank={i + 1} defaultOpen={i === 0} jdPreview={jdText} />
+            <CandidateCard
+              key={`${r.filename}-${i}`}
+              result={r}
+              rank={i + 1}
+              defaultOpen={i === 0}
+              jdPreview={jdText}
+              selected={selected.has(r.filename)}
+              onToggleSelect={toggleSelect}
+            />
           ))}
         </div>
       )}
@@ -119,6 +246,15 @@ export default function CandidatesTab({ data, jdText = '' }) {
       <p className="mt-6 text-xs text-slate-400 text-right">
         {data.results.length} total · {filtered.length} shown
       </p>
+
+      {selected.size > 0 && (
+        <BulkEmailBar
+          selected={selected}
+          candidates={data.results}
+          jdText={jdText}
+          onClear={() => setSelected(new Set())}
+        />
+      )}
     </div>
   )
 }
