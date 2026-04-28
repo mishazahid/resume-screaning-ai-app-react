@@ -14,17 +14,17 @@ const RECOMMENDATION_COLORS = {
 const SCORE_BUCKET_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#6366f1']
 
 function KpiCard({ label, value, sub, color = 'indigo' }) {
-  const colors = {
-    indigo:  'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900',
-    emerald: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
-    amber:   'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 border-amber-100 dark:border-amber-900',
-    violet:  'bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-300 border-violet-100 dark:border-violet-900',
-  }
+  const accent = {
+    indigo:  { border: 'border-l-indigo-500',  value: '#6366f1' },
+    emerald: { border: 'border-l-emerald-500', value: '#10b981' },
+    amber:   { border: 'border-l-amber-500',   value: '#f59e0b' },
+    violet:  { border: 'border-l-violet-500',  value: '#8b5cf6' },
+  }[color]
   return (
-    <div className={`rounded-2xl border p-5 ${colors[color]}`}>
-      <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">{label}</p>
-      <p className="text-3xl font-bold">{value}</p>
-      {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}
+    <div className={`rounded-2xl border border-slate-200 bg-white p-5 border-l-4 ${accent.border}`}>
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">{label}</p>
+      <p className="text-3xl font-bold text-slate-800" style={{ color: accent.value }}>{value}</p>
+      {sub && <p className="text-xs mt-1 text-slate-400">{sub}</p>}
     </div>
   )
 }
