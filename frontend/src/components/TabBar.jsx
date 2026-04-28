@@ -1,6 +1,7 @@
 export const TABS = [
   { id: 'screen',     label: 'Screen'     },
   { id: 'candidates', label: 'Candidates', requiresData: true },
+  { id: 'analytics',  label: 'Analytics',  requiresData: true },
   { id: 'ethics',     label: 'Ethics',     requiresData: true },
   { id: 'jobs',       label: 'Jobs'        },
   { id: 'history',    label: 'History'     },

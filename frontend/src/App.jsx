@@ -7,6 +7,7 @@ import LoadingOverlay from './components/LoadingOverlay'
 
 import ScreenTab     from './components/tabs/ScreenTab'
 import CandidatesTab from './components/tabs/CandidatesTab'
+import AnalyticsTab  from './components/tabs/AnalyticsTab'
 import EthicsTab     from './components/tabs/EthicsTab'
 import JobsTab       from './components/tabs/JobsTab'
 import HistoryTab    from './components/tabs/HistoryTab'
@@ -118,6 +119,8 @@ export default function App() {
         )
       case 'candidates':
         return <CandidatesTab data={data} jdText={jdText} />
+      case 'analytics':
+        return <AnalyticsTab data={data} />
       case 'ethics':
         return <EthicsTab data={data} />
       case 'jobs':
