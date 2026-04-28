@@ -15,10 +15,10 @@ const SCORE_BUCKET_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#6366f1']
 
 function KpiCard({ label, value, sub, color = 'indigo' }) {
   const colors = {
-    indigo:  'bg-indigo-50 text-indigo-600 border-indigo-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    amber:   'bg-amber-50 text-amber-600 border-amber-100',
-    violet:  'bg-violet-50 text-violet-600 border-violet-100',
+    indigo:  'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900',
+    emerald: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
+    amber:   'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 border-amber-100 dark:border-amber-900',
+    violet:  'bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-300 border-violet-100 dark:border-violet-900',
   }
   return (
     <div className={`rounded-2xl border p-5 ${colors[color]}`}>
@@ -31,7 +31,7 @@ function KpiCard({ label, value, sub, color = 'indigo' }) {
 
 function SectionHeader({ title }) {
   return (
-    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{title}</h3>
+    <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">{title}</h3>
   )
 }
 
